@@ -263,13 +263,13 @@ const IMGS={asean:"data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1B
 const QUIZ = [
   {q:"1. Which specific period marked the official beginning of Vietnam's membership in ASEAN?", opts:["A. 1977","B. 1995","C. 2007","D. 2019"], ans:1},
   {q:"2. What is the main goal of the \"ASEAN Smart Cities Network\" project in Da Nang?", opts:["A. Building more traditional markets","B. Developing smart traffic control systems","C. Increasing manual waste collection","D. Opening more international schools"], ans:1},
-  {q:"3. Which project does Da Nang collaborate on with the UN to protect the local environment?", opts:["A. Industrial factory expansion plans","B. Global Environment Facility projects","C. Large scale mountain mining projects","D. Building luxury tourist resorts"], ans:1},
-  {q:"4. What does the \"Child Friendly City Initiative\" by UNICEF focus on providing for children?", opts:["A. Professional vocational training","B. Safe creative playgrounds and libraries","C. Immediate full-time employment","D. High-interest bank accounts"], ans:1},
-  {q:"5. How does the WTO's \"Trade Facilitation Agreement\" support Da Nang's local businesses?", opts:["A. By increasing border tax rates","B. By reducing customs paperwork and costs","C. By restricting foreign market access","D. By closing all international ports"], ans:1},
-  {q:"6. Which district in Da Nang is a focus area for UNICEF's community projects?", opts:["A. Lien Chieu Industrial Zone","B. Hai Chau Commercial District","C. Hoa Vang District communities","D. Son Tra Tourism Peninsula"], ans:2},
-  {q:"7. In the presentation, what does the phrasal verb \"broken out of\" mean?", opts:["A. Starting a physical fight","B. Ending international isolation","C. Escaping from a local prison","D. Repairing a broken machine"], ans:1},
-  {q:"8. Why is the WTO particularly important for the stone carving village in Ngu Hanh Son?", opts:["A. It provides free raw materials","B. It helps export products globally","C. It teaches traditional carving skills","D. It manages local tourist tickets"], ans:1},
-  {q:"9. According to the talk, what characterizes an \"applicable\" program?", opts:["A. It is extremely expensive to run","B. It can be put into practical use","C. It belongs to the ancient past","D. It is only a theoretical idea"], ans:1},
+  {q:"3. Which UN project uses Vovinam to empower and protect women in Vietnam?", opts:["A. Industrial factory expansion","B. Guardian Girls project","C. Large scale mining","D. Luxury tourist resorts"], ans:1},
+  {q:"4. What is the traditional Vietnamese food that symbolizes the earth and the sky during Tet?", opts:["A. Banh Chung and Banh Tet","B. Banh Mi","C. Pho","D. Bun Cha"], ans:0},
+  {q:"5. What is the lucky money tradition called in Vietnamese?", opts:["A. Giving flowers","B. Buying new clothes","C. Li Xi","D. Decorating houses"], ans:2},
+  {q:"6. Which flower is most common in Southern Vietnam during the Tet holiday?", opts:["A. Peach Blossom","B. Ochna Blossom","C. Lotus","D. Rose"], ans:1},
+  {q:"7. How does the WTO's \"Trade Facilitation Agreement\" support Da Nang's local businesses?", opts:["A. By increasing border tax rates","B. By reducing customs paperwork and costs","C. By restricting foreign market access","D. By closing all international ports"], ans:1},
+  {q:"8. Which district in Da Nang is a focus area for UNICEF's community projects?", opts:["A. Lien Chieu Industrial Zone","B. Hai Chau Commercial District","C. Hoa Vang District communities","D. Son Tra Tourism Peninsula"], ans:2},
+  {q:"9. In the presentation, what does the phrasal verb \"broken out of\" mean?", opts:["A. Starting a physical fight","B. Ending international isolation","C. Escaping from a local prison","D. Repairing a broken machine"], ans:1},
   {q:"10. What is the overall benefit of joining these organizations for Da Nang?", opts:["A. Complete financial dependency","B. Multilateral cooperative growth","C. Isolating neighboring countries","D. Reducing technological development"], ans:1},
 ];
 // Probability weights: 20k=1/31, 10k=1/20, 5k=1/10, 2k=1/4, 1k=1/4 (2k+1k dominate)
@@ -407,15 +407,22 @@ function onFlip(i){
 }
 function checkFlip(){
   const[a,b]=flippedCards;
+  const ea=document.querySelector(`.flip-card[data-i="${a}"]`);
+  const eb=document.querySelector(`.flip-card[data-i="${b}"]`);
   if(flipCards[a].id===flipCards[b].id){
     flipCards[a].matched=flipCards[b].matched=true;matchedPairs++;flipScore+=20;
-    document.querySelector(`.flip-card[data-i="${a}"]`).classList.add("matched");
-    document.querySelector(`.flip-card[data-i="${b}"]`).classList.add("matched");
+    if(ea)ea.classList.add("matched");
+    if(eb)eb.classList.add("matched");
     toast("🎉 Cặp đôi! +20 điểm");
   }else{
-    const ea=document.querySelector(`.flip-card[data-i="${a}"]`),eb=document.querySelector(`.flip-card[data-i="${b}"]`);
-    ea.classList.add("wrong");eb.classList.add("wrong");
-    setTimeout(()=>{ea.classList.remove("flipped","wrong");eb.classList.remove("flipped","wrong");},700);
+    if(ea)ea.classList.add("wrong");
+    if(eb)eb.classList.add("wrong");
+    setTimeout(()=>{
+      const ra=document.querySelector(`.flip-card[data-i="${a}"]`);
+      const rb=document.querySelector(`.flip-card[data-i="${b}"]`);
+      if(ra)ra.classList.remove("flipped","wrong");
+      if(rb)rb.classList.remove("flipped","wrong");
+    },700);
   }
   flippedCards=[];flipLocked=false;updateFlipStat();
   if(matchedPairs>=4)setTimeout(()=>{totalScore+=flipScore;toast("Xong chặng 1! +"+flipScore+" điểm",2000);setTimeout(()=>showPass(2),2200);},500);
@@ -453,19 +460,21 @@ function onMatch(el,type){
   if(selLogo&&selName)setTimeout(checkMatch,200);
 }
 function checkMatch(){
-  if(selLogo.dataset.id===selName.dataset.id){
-    selLogo.classList.remove("selected");selName.classList.remove("selected");
-    selLogo.classList.add("matched-correct");selName.classList.add("matched-correct");
-    selLogo.style.pointerEvents="none";selName.style.pointerEvents="none";
+  if(!selLogo||!selName)return;
+  const logo=selLogo, name=selName;
+  selLogo=null;selName=null;
+  if(logo.dataset.id===name.dataset.id){
+    logo.classList.remove("selected");name.classList.remove("selected");
+    logo.classList.add("matched-correct");name.classList.add("matched-correct");
+    logo.style.pointerEvents="none";name.style.pointerEvents="none";
     matchCorrect++;matchScore+=25;toast("✅ Đúng! +25 điểm");
     document.getElementById("match-res").textContent="Đúng "+matchCorrect+"/4 🎯";
     if(matchCorrect>=4)setTimeout(()=>{totalScore+=matchScore;toast("Xong chặng 2! +"+matchScore+" điểm",2000);setTimeout(()=>showPass(3),2200);},600);
   }else{
-    selLogo.classList.add("matched-wrong");selName.classList.add("matched-wrong");
-    setTimeout(()=>{selLogo.classList.remove("selected","matched-wrong");selName.classList.remove("selected","matched-wrong");},700);
+    logo.classList.add("matched-wrong");name.classList.add("matched-wrong");
+    setTimeout(()=>{logo.classList.remove("selected","matched-wrong");name.classList.remove("selected","matched-wrong");},700);
     toast("❌ Sai rồi! Thử lại!");
   }
-  selLogo=null;selName=null;
 }
 
 // ── QUIZ ──
@@ -490,8 +499,14 @@ function pickAns(idx,btn){
   const q=QUIZ[qIdx];
   document.querySelectorAll(".option-btn").forEach(b=>b.classList.add("disabled"));
   const res=document.getElementById("q-result");
-  if(idx===q.ans){btn.classList.add("correct");qScore+=10;res.className="result-txt ok";res.textContent="🎉 Đúng rồi! +10 điểm";}
-  else{btn.classList.add("wrong");res.className="result-txt bad";res.textContent="❌ Sai! Đáp án đúng: "+q.opts[q.ans];document.querySelectorAll(".option-btn")[q.ans].classList.add("correct");}
+  if(idx===q.ans){
+    btn.classList.add("correct");qScore+=10;res.className="result-txt ok";res.textContent="🎉 Đúng rồi! +10 điểm";
+  }else{
+    btn.classList.add("wrong");
+    res.className="result-txt bad";res.textContent="❌ Sai! Đáp án đúng: "+q.opts[q.ans];
+    const correctBtn=document.querySelectorAll(".option-btn")[q.ans];
+    if(correctBtn)correctBtn.classList.add("correct");
+  }
   document.getElementById("q-next").style.display="flex";
 }
 function nextQ(){qIdx++;if(qIdx>=10){totalScore+=qScore;showPrize();}else renderQ();}
@@ -506,39 +521,41 @@ function showPrize(){
 // ── HOLD-TO-SHAKE ──
 function startHold(e){
   e.preventDefault();
+  if(holdTimer)return; // already holding
   holdProgress=0;
   const btn=document.getElementById("shake-btn");
   const ring=document.getElementById("shake-ring");
+  if(!btn||!ring)return;
   btn.classList.add("holding");
   ring.style.transition="none";
   ring.style.strokeDashoffset="188";
-  // Slight delay then start
   holdTimer=setInterval(()=>{
     holdProgress+=50;
     const pct=Math.min(holdProgress/holdDuration,1);
     const offset=188-(188*pct);
-    ring.style.transition="stroke-dashoffset 0.05s linear";
-    ring.style.strokeDashoffset=offset;
-    // Shake intensity increases
+    const b=document.getElementById("shake-btn");
+    const r=document.getElementById("shake-ring");
+    if(!b||!r){clearInterval(holdTimer);holdTimer=null;return;}
+    r.style.transition="stroke-dashoffset 0.05s linear";
+    r.style.strokeDashoffset=offset;
     const amp=3+pct*10;
-    btn.style.transform=`rotate(${(Math.random()-0.5)*amp*2}deg) translate(${(Math.random()-0.5)*amp}px,${(Math.random()-0.5)*amp}px)`;
-    if(holdProgress>=holdDuration){
-      stopHold(true);
-    }
+    b.style.transform=`rotate(${(Math.random()-0.5)*amp*2}deg) translate(${(Math.random()-0.5)*amp}px,${(Math.random()-0.5)*amp}px)`;
+    if(holdProgress>=holdDuration){stopHold(true);}
   },50);
 }
 function stopHold(success){
+  if(!holdTimer&&!success)return; // not holding, ignore stray events
   clearInterval(holdTimer);holdTimer=null;
   const btn=document.getElementById("shake-btn");
   const ring=document.getElementById("shake-ring");
-  btn.classList.remove("holding");
-  btn.style.transform="";
+  if(btn){btn.classList.remove("holding");btn.style.transform="";}
   if(!success){
-    ring.style.strokeDashoffset="188";
-    toast("Giữ lâu hơn để lắc quẻ! 🎋");
+    if(ring)ring.style.strokeDashoffset="188";
+    if(holdProgress>0)toast("Giữ lâu hơn để lắc quẻ! 🎋");
+    holdProgress=0;
   }else{
-    ring.style.strokeDashoffset="0";
-    setTimeout(()=>{ring.style.strokeDashoffset="188";},600);
+    holdProgress=0;
+    if(ring){ring.style.strokeDashoffset="0";setTimeout(()=>{const r=document.getElementById("shake-ring");if(r)r.style.strokeDashoffset="188";},600);}
     openQue();
   }
 }
