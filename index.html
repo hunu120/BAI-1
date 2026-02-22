@@ -133,6 +133,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 /* Toast */
 .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);border:2px solid #FFD700;color:#FFF9C4;padding:12px 24px;border-radius:30px;font-size:1.1rem;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;}
 .toast.show{opacity:1;}
+.pass-shake{animation:pass-err .4s ease;}
+@keyframes pass-err{0%,100%{transform:translateX(0);}20%{transform:translateX(-10px);}40%{transform:translateX(10px);}60%{transform:translateX(-8px);}80%{transform:translateX(8px);}}
 ::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:rgba(0,0,0,.2);}::-webkit-scrollbar-thumb{background:#FFD700;border-radius:4px;}
 </style>
 </head>
@@ -177,6 +179,21 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
       <h2 id="intro-name"></h2><p id="intro-desc"></p>
       <button class="btn" onclick="startCurrentStage()">▶️ Bắt đầu chặng này!</button>
     </div></div>
+  </div>
+
+  <!-- PASSWORD GATE -->
+  <div class="screen" id="s-pass">
+    <div class="banner"><div class="banner-title" id="pass-title">🔐 Mật Khẩu</div><div class="banner-sub" id="pass-sub"></div></div>
+    <div class="card">
+      <div class="nickname-wrap">
+        <div style="font-size:3.5rem;margin-bottom:12px">🔑</div>
+        <div class="nickname-label" id="pass-label">Nhập mật khẩu để tiếp tục!</div>
+        <input type="text" class="nickname-input" id="pass-input" placeholder="Nhập mật khẩu..." maxlength="20"
+          oninput="clearPassError()" onkeydown="if(event.key==='Enter')checkPass()">
+        <div id="pass-error" style="color:#FF6B6B;font-size:1rem;font-weight:700;min-height:24px;margin-bottom:10px"></div>
+        <button class="btn" onclick="checkPass()">✅ Xác nhận</button>
+      </div>
+    </div>
   </div>
 
   <div class="screen" id="s-flip">
@@ -401,7 +418,7 @@ function checkFlip(){
     setTimeout(()=>{ea.classList.remove("flipped","wrong");eb.classList.remove("flipped","wrong");},700);
   }
   flippedCards=[];flipLocked=false;updateFlipStat();
-  if(matchedPairs>=4)setTimeout(()=>{totalScore+=flipScore;toast("Xong chặng 1! +"+flipScore+" điểm",2000);setTimeout(()=>showIntro(2),2200);},500);
+  if(matchedPairs>=4)setTimeout(()=>{totalScore+=flipScore;toast("Xong chặng 1! +"+flipScore+" điểm",2000);setTimeout(()=>showPass(2),2200);},500);
 }
 function updateFlipStat(){
   document.getElementById("flip-pairs").textContent="Cặp: "+matchedPairs+"/4";
@@ -442,7 +459,7 @@ function checkMatch(){
     selLogo.style.pointerEvents="none";selName.style.pointerEvents="none";
     matchCorrect++;matchScore+=25;toast("✅ Đúng! +25 điểm");
     document.getElementById("match-res").textContent="Đúng "+matchCorrect+"/4 🎯";
-    if(matchCorrect>=4)setTimeout(()=>{totalScore+=matchScore;toast("Xong chặng 2! +"+matchScore+" điểm",2000);setTimeout(()=>showIntro(3),2200);},600);
+    if(matchCorrect>=4)setTimeout(()=>{totalScore+=matchScore;toast("Xong chặng 2! +"+matchScore+" điểm",2000);setTimeout(()=>showPass(3),2200);},600);
   }else{
     selLogo.classList.add("matched-wrong");selName.classList.add("matched-wrong");
     setTimeout(()=>{selLogo.classList.remove("selected","matched-wrong");selName.classList.remove("selected","matched-wrong");},700);
@@ -581,6 +598,38 @@ function spawnPopupFx(type){
     }
     c.appendChild(p);
   }
+}
+
+// ── PASSWORD GATE ──
+const PASS_MAP = {2:"107", 3:"101"};
+let pendingStage = 0;
+function showPass(stage){
+  pendingStage = stage;
+  const labels = {2:"Chặng 2", 3:"Chặng 3"};
+  document.getElementById("pass-title").textContent = "🔐 Mật Khẩu " + labels[stage];
+  document.getElementById("pass-sub").textContent = "Người chơi: " + playerName;
+  document.getElementById("pass-label").textContent = "Nhập mật khẩu để vào " + labels[stage] + "!";
+  document.getElementById("pass-input").value = "";
+  document.getElementById("pass-error").textContent = "";
+  showScreen("s-pass");
+  setTimeout(()=>document.getElementById("pass-input").focus(), 300);
+}
+function checkPass(){
+  const val = document.getElementById("pass-input").value.trim();
+  if(val === PASS_MAP[pendingStage]){
+    document.getElementById("pass-input").value = "";
+    toast("✅ Mật khẩu đúng! Vào chặng tiếp theo...", 1500);
+    setTimeout(()=>showIntro(pendingStage), 1600);
+  } else {
+    const el = document.getElementById("pass-error");
+    el.textContent = "❌ Sai mật khẩu rồi! Thử lại nhé~";
+    document.getElementById("pass-input").value = "";
+    document.getElementById("pass-input").classList.add("pass-shake");
+    setTimeout(()=>document.getElementById("pass-input").classList.remove("pass-shake"), 500);
+  }
+}
+function clearPassError(){
+  document.getElementById("pass-error").textContent = "";
 }
 
 function restartGame(){
